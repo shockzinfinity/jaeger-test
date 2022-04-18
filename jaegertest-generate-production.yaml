@@ -1,0 +1,165 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: calculator
+  labels:
+    app.kubernetes.io/name: 'calculator'
+    app.kubernetes.io/part-of: 'jaegertest'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: calculator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'calculator'
+        app.kubernetes.io/part-of: 'jaegertest'
+    spec:
+      containers:
+      - name: calculator
+        image: calculator:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: DOTNET_LOGGING__CONSOLE__DISABLECOLORS
+          value: 'true'
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: SERVICE__CALCULATOR__PROTOCOL
+          value: 'http'
+        - name: SERVICE__CALCULATOR__PORT
+          value: '80'
+        - name: SERVICE__CALCULATOR__HOST
+          value: 'calculator'
+        - name: SERVICE__LOGSERVICE__PROTOCOL
+          value: 'http'
+        - name: SERVICE__LOGSERVICE__PORT
+          value: '80'
+        - name: SERVICE__LOGSERVICE__HOST
+          value: 'logservice'
+        - name: CONNECTIONSTRINGS__JAEGER__HTTP-THRIFT
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-jaeger-http-thrift-secret'
+              key: 'connectionstring'
+        - name: SERVICE__JAEGER__UI__PROTOCOL
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-jaeger-ui-secret'
+              key: 'protocol'
+        - name: SERVICE__JAEGER__UI__HOST
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-jaeger-ui-secret'
+              key: 'host'
+        - name: SERVICE__JAEGER__UI__PORT
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-jaeger-ui-secret'
+              key: 'port'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: calculator
+  labels:
+    app.kubernetes.io/name: 'calculator'
+    app.kubernetes.io/part-of: 'jaegertest'
+spec:
+  selector:
+    app.kubernetes.io/name: calculator
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: logservice
+  labels:
+    app.kubernetes.io/name: 'logservice'
+    app.kubernetes.io/part-of: 'jaegertest'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: logservice
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'logservice'
+        app.kubernetes.io/part-of: 'jaegertest'
+    spec:
+      containers:
+      - name: logservice
+        image: logservice:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: DOTNET_LOGGING__CONSOLE__DISABLECOLORS
+          value: 'true'
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: SERVICE__LOGSERVICE__PROTOCOL
+          value: 'http'
+        - name: SERVICE__LOGSERVICE__PORT
+          value: '80'
+        - name: SERVICE__LOGSERVICE__HOST
+          value: 'logservice'
+        - name: SERVICE__CALCULATOR__PROTOCOL
+          value: 'http'
+        - name: SERVICE__CALCULATOR__PORT
+          value: '80'
+        - name: SERVICE__CALCULATOR__HOST
+          value: 'calculator'
+        - name: CONNECTIONSTRINGS__JAEGER__HTTP-THRIFT
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-jaeger-http-thrift-secret'
+              key: 'connectionstring'
+        - name: SERVICE__JAEGER__UI__PROTOCOL
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-jaeger-ui-secret'
+              key: 'protocol'
+        - name: SERVICE__JAEGER__UI__HOST
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-jaeger-ui-secret'
+              key: 'host'
+        - name: SERVICE__JAEGER__UI__PORT
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-jaeger-ui-secret'
+              key: 'port'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: logservice
+  labels:
+    app.kubernetes.io/name: 'logservice'
+    app.kubernetes.io/part-of: 'jaegertest'
+spec:
+  selector:
+    app.kubernetes.io/name: logservice
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...

@@ -1,0 +1,20 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: jaegertest
+services:
+  - name: calculator
+    project: calculator/Calculator.csproj
+  - name: logservice
+    project: logservice/LogService.csproj
+  - name: Jaeger
+    image: jaegertracing/all-in-one:latest
+    bindings:
+      - port: 14268
+        connectionString: http://${host}:${port}/api/traces
+        name: http-thrift
+      - port: 16686
+        name: ui
